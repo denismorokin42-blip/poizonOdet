@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoizonOdet - Приватная логистика из Китая</title>
+    
+    <!-- Подключение шрифта Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Подключение библиотеки Lenis для премиального плавного скролла -->
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+    <!-- Подключение Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Подключение Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Подключение Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Настройка конфигурации Tailwind для кастомных стилей -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .bg-brand-gradient {
+            background: linear-gradient(90deg, #0253FA 0%, #2690D2 86%, #27D2D3 100%);
+        }
+        .text-brand-gradient {
+            background: linear-gradient(90deg, #0253FA 0%, #2690D2 86%, #27D2D3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+
+        html.lenis, html.lenis body { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto !important; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
+
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .scroll-anim {
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+        .scroll-hidden { opacity: 0; transform: translateY(50px) scale(0.96); }
+        .scroll-visible { opacity: 1; transform: translateY(0) scale(1); }
+        .faq-icon-rotate { transform: rotate(180deg); }
+
+        .faq-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s ease-in-out; }
+        .faq-content.is-open { grid-template-rows: 1fr; }
+        .faq-inner { overflow: hidden; }
+
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(calc(-100% - 1.5rem)); } }
+        .marquee-content { animation: marquee 45s linear infinite; }
+        .marquee-container:hover .marquee-content { animation-play-state: paused; }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+
+        .toast-enter { animation: toast-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .toast-exit { animation: toast-out-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes toast-in-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toast-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-400 font-sans min-h-screen antialiased selection:bg-[#2690D2]/30 relative overflow-x-hidden flex flex-col">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-24 right-4 sm:right-6 z-[120] flex flex-col gap-3 items-end pointer-events-none"></div>
+
+    <!-- Ambient Light -->
+    <div class="fixed top-[10%] left-[5%] w-[600px] h-[600px] bg-[#0253FA]/15 blur-[120px] rounded-full pointer-events-none z-[-1]"></div>
+    <div class="fixed bottom-[10%] right-[5%] w-[800px] h-[800px] bg-[#2690D2]/10 blur-[120px] rounded-full pointer-events-none z-[-1]"></div>
+    <div class="fixed top-[40%] right-[20%] w-96 h-96 bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none z-[-1]"></div>
+    <div class="fixed bottom-[20%] left-[15%] w-96 h-96 bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none z-[-1]"></div>
+
+    <!-- ========================================== -->
+    <!-- VIEW ADMIN (SPA CRM)                       -->
+    <!-- ========================================== -->
+    <div id="view-admin" class="hidden min-h-screen bg-slate-950 flex fixed inset-0 z-[100] overflow-hidden">
+        <aside class="w-[250px] bg-slate-900 border-r border-white/5 flex flex-col shrink-0 relative z-20 shadow-2xl">
+            <div class="h-20 flex items-center px-6 border-b border-white/5">
+                <div class="text-xl font-extrabold tracking-tight text-gray-50 flex items-center gap-2">
+                    Poizon<span class="text-brand-gradient">Odet</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider bg-[#2690D2]/20 text-[#2690D2] px-1.5 py-0.5 rounded border border-[#2690D2]/30">Admin</span>
+                </div>
+            </div>
+            <nav class="flex-1 p-4 flex flex-col gap-2">
+                <a href="#" class="px-4 py-2.5 bg-[#2690D2]/10 text-[#2690D2] rounded-lg text-sm font-medium border border-[#2690D2]/20 transition-colors">Рассылка & Заказы</a>
+            </nav>
+            <div class="p-4 border-t border-white/5">
+                <button onclick="handleSignOut()" class="w-full px-4 py-2.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors text-left flex items-center gap-3">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    Выход из панели
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-1 p-8 sm:p-12 overflow-y-auto relative z-10">
+            <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-[#0253FA]/15 blur-[120px] rounded-full pointer-events-none z-[-1]"></div>
+            
+            <div class="max-w-6xl mx-auto scroll-hidden scroll-anim" style="transition-delay: 0ms;">
+                
+                <!-- Блок Массовой Рассылки Telegram -->
+                <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 p-6 rounded-xl mb-8 shadow-lg">
+                    <h3 class="text-xl font-bold text-gray-50 mb-5">Массовая Telegram Рассылка</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="flex flex-col">
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Текст рассылки (поддерживает HTML)</label>
+                            <textarea id="tg-broadcast-text" rows="5" placeholder="<b>Внимание!</b> Скидки на доставку..." class="w-full bg-slate-900/50 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] outline-none rounded-lg px-4 py-3 transition-colors text-sm flex-1 resize-none"></textarea>
+                        </div>
+                        <div class="flex flex-col justify-end">
+                            <div class="bg-slate-900/30 border border-white/5 rounded-lg p-4 mb-4 text-xs text-slate-400 leading-relaxed shadow-inner">
+                                <span class="block text-[#2690D2] font-semibold mb-1">Информация:</span>
+                                Рассылка происходит по базе (таблица telegram_users). Токен бота уже надежно вшит в систему. Во избежание блокировки от Telegram добавлена задержка 50мс между отправкой сообщений.
+                            </div>
+                            <button type="button" id="btn-broadcast" onclick="startMassBroadcast()" class="w-full bg-brand-gradient hover:opacity-90 text-white font-medium rounded-lg py-3 transition-all duration-200 text-sm shadow-md flex justify-center items-center">
+                                Запустить рассылку
+                            </button>
+                            <div id="broadcast-status" class="hidden mt-3 text-sm text-center text-[#2690D2] font-medium bg-[#2690D2]/10 py-2 rounded-lg border border-[#2690D2]/20"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок создания заказа -->
+                <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 p-6 rounded-xl mb-8 shadow-lg">
+                    <div class="flex justify-between items-center mb-5">
+                        <h3 class="text-xl font-bold text-gray-50">Создать новый выкуп</h3>
+                        <button onclick="loadAdminOrders()" class="text-sm bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-slate-300 transition-colors font-medium flex items-center gap-2 border border-white/5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Обновить таблицу
+                        </button>
+                    </div>
+                    <form id="adminOrderForm" onsubmit="handleCreateOrderAdmin(event)" class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Внутренний трек-номер</label>
+                            <div class="relative flex items-center">
+                                <input type="text" id="newOrderId" required placeholder="PO-1024" class="w-full bg-slate-900/50 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] outline-none rounded-lg pl-4 pr-10 py-2.5 transition-colors text-sm font-mono">
+                                <button type="button" onclick="generateTrackNumberAdmin()" class="absolute right-2 text-slate-400 hover:text-[#2690D2] transition-colors p-1" title="Сгенерировать">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Контакт (Telegram/Телефон)</label>
+                            <input type="text" id="newOrderContact" placeholder="@telegram или номер..." class="w-full bg-slate-900/50 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] outline-none rounded-lg px-4 py-2.5 transition-colors text-sm">
+                        </div>
+                        <div class="lg:col-span-2 flex gap-4">
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">Ссылка на товар (Poizon/1688)</label>
+                                <input type="url" id="newItemLink" placeholder="https://..." class="w-full bg-slate-900/50 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] outline-none rounded-lg px-4 py-2.5 transition-colors text-sm">
+                            </div>
+                            <div class="shrink-0 w-1/3">
+                                <button type="submit" id="btnCreateOrderAdmin" class="w-full bg-brand-gradient hover:opacity-90 text-white font-medium rounded-lg py-2.5 transition-all duration-200 text-sm shadow-md h-[42px] flex justify-center items-center mt-6">
+                                    Создать заказ
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <h2 class="text-3xl font-bold text-gray-50 mb-3 flex items-center justify-between">
+                    База заказов
+                </h2>
+                
+                <div class="bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden shadow-xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead>
+                                <tr class="border-b border-white/10 bg-slate-900/50 text-slate-400 text-sm tracking-wide">
+                                    <th class="p-5 font-medium">Трек-номер</th>
+                                    <th class="p-5 font-medium">Контакт клиента</th>
+                                    <th class="p-5 font-medium">Ссылка на товар</th>
+                                    <th class="p-5 font-medium">Статус</th>
+                                    <th class="p-5 font-medium">Доставка (₽)</th>
+                                    <th class="p-5 font-medium text-right">Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm" id="admin-orders-tbody">
+                                <tr><td colspan="6" class="p-8 text-center text-slate-500">Загрузка заказов...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно Карточки Заказа (Admin CRM) -->
+    <div id="admin-order-modal" class="hidden fixed inset-0 z-[150] overflow-y-auto bg-slate-950/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="flex min-h-full items-center justify-center p-4" onclick="if(event.target === this) closeAdminOrderCard()">
+            <div id="admin-modal-card" class="bg-slate-800/95 backdrop-blur-2xl border border-white/10 p-6 sm:p-8 rounded-3xl w-full max-w-4xl shadow-2xl relative transform scale-95 transition-transform duration-300">
+                <button onclick="closeAdminOrderCard()" class="absolute top-5 right-5 sm:top-6 sm:right-6 text-slate-400 hover:text-white transition-colors focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-50 mb-6">Карточка заказа: <span id="admin-modal-id" class="text-brand-gradient font-mono">#</span></h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Левая колонка: Инфо и Фото -->
+                    <div class="space-y-6 flex flex-col">
+                        <div class="bg-slate-900/50 rounded-2xl p-5 border border-white/5 space-y-4">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#2690D2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                Информация о заказе
+                            </h4>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1.5">Контакт клиента</label>
+                                <input type="text" id="admin-update-contact" placeholder="@telegram, телефон или ФИО" class="w-full bg-slate-800/80 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] rounded-xl px-4 py-2.5 outline-none transition-colors text-sm">
+                            </div>
+
+                            <div>
+                                <span class="block text-xs font-medium text-slate-500 mb-1.5">Ссылка для выкупа</span> 
+                                <a href="#" id="admin-card-item-link" target="_blank" class="text-[#2690D2] font-medium text-sm block truncate bg-slate-800/50 p-3 rounded-xl border border-white/5 hover:border-[#2690D2]/50 transition-colors">Не указана</a>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 flex flex-col">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Фото со склада</h4>
+                            <div class="relative border-2 border-dashed border-slate-600 bg-slate-900/50 rounded-2xl p-4 text-center flex flex-col items-center justify-center cursor-pointer hover:border-[#2690D2] transition-all group overflow-hidden flex-1 min-h-[200px]">
+                                <input type="file" id="admin-photo-upload" accept="image/*" onchange="handlePhotoSelect(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                <img id="admin-photo-preview" src="" class="hidden absolute inset-0 w-full h-full object-cover z-0 opacity-60 group-hover:opacity-30 transition-opacity">
+                                <div class="relative z-0 flex flex-col items-center pointer-events-none">
+                                    <svg class="w-8 h-8 text-slate-500 group-hover:text-[#2690D2] mb-2 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                    <span id="photo-upload-text" class="text-sm text-slate-400 group-hover:text-slate-300 transition-colors truncate px-4 w-full">Нажмите для загрузки фото</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Правая колонка: Управление заказом -->
+                    <div class="flex flex-col h-full">
+                        <div class="bg-slate-900/50 rounded-2xl p-5 border border-white/5 space-y-5 flex-1">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#2690D2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                Управление заказом
+                            </h4>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">Трек-номер заказа (ID)</label>
+                                <input type="text" id="admin-update-track" class="w-full bg-slate-800/80 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] rounded-xl px-4 py-3 outline-none transition-colors text-sm font-mono">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1.5">Статус заказа</label>
+                                <div class="relative">
+                                    <select id="admin-update-status" class="w-full bg-slate-800/80 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] outline-none rounded-xl px-4 py-3 transition-colors appearance-none cursor-pointer text-sm">
+                                        <option value="Ожидает расчета">Ожидает расчета</option>
+                                        <option value="Выкуплен">Выкуплен</option>
+                                        <option value="Едет на склад в Китае">Едет на склад в Китае</option>
+                                        <option value="На складе">На складе</option>
+                                        <option value="Отправлен в Россию">Отправлен в Россию</option>
+                                        <option value="Отправлен к вам">Отправлен к вам</option>
+                                        <option value="Выдан">Выдан</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 pt-1">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Вес (кг)</label>
+                                    <input type="number" id="admin-update-weight" step="0.01" placeholder="0.0" class="w-full bg-slate-800/80 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] rounded-xl px-4 py-3 outline-none transition-colors text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Доставка (₽)</label>
+                                    <input type="number" id="admin-update-price" placeholder="0" class="w-full bg-slate-800/80 border border-emerald-500/30 text-emerald-400 focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] rounded-xl px-4 py-3 outline-none font-bold transition-colors text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3 mt-6">
+                            <button onclick="closeAdminOrderCard()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white rounded-xl py-3.5 transition-colors duration-200 border border-white/5 text-sm font-medium">Отмена</button>
+                            <button id="admin-save-btn" onclick="saveAdminOrderCard()" class="flex-1 bg-brand-gradient hover:opacity-90 text-white rounded-xl py-3.5 transition-all duration-200 flex justify-center items-center shadow-lg shadow-[#0253FA]/20 text-sm font-medium">Обновить заказ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно Входа (Только для Админа) -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-[150] overflow-y-auto bg-slate-950/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="flex min-h-full items-center justify-center p-4" onclick="if(event.target === this) closeAuthModal()">
+            <div id="auth-modal-card" class="bg-slate-800/90 backdrop-blur-2xl border border-white/10 p-6 sm:p-8 rounded-3xl w-full max-w-md shadow-2xl relative transform scale-95 transition-transform duration-300">
+                <button onclick="closeAuthModal()" class="absolute top-5 right-5 sm:top-6 sm:right-6 text-slate-400 hover:text-white transition-colors focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-50 mb-6 text-center">Вход в панель управления</h3>
+                <form id="auth-form" onsubmit="event.preventDefault(); submitAuth();" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1.5">Email администратора</label>
+                        <input type="email" id="auth-email" value="vladislav@poizonodet.ru" required class="w-full bg-slate-900/50 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] outline-none rounded-xl px-4 py-2.5 sm:py-3 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1.5">Пароль</label>
+                        <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-900/50 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] outline-none rounded-xl px-4 py-2.5 sm:py-3 transition-colors">
+                    </div>
+                    <button type="submit" id="auth-submit-btn" class="w-full bg-brand-gradient hover:opacity-90 text-white font-medium rounded-xl py-3 sm:py-3.5 mt-4 transition-all flex justify-center items-center shadow-lg shadow-[#0253FA]/20">
+                        Войти
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-slate-800/40 backdrop-blur-xl border-b border-white/5 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div id="nav-logo" class="text-2xl font-extrabold tracking-tight cursor-pointer text-gray-50">
+                Poizon<span class="text-brand-gradient">Odet</span>
+            </div>
+            
+            <nav class="hidden md:flex space-x-8 text-sm font-medium text-slate-400">
+                <a href="#view-home" onclick="switchView('home')" class="hover:text-gray-50 transition-colors duration-200">Главная</a>
+                <a href="#why-us" class="nav-link-scroll hover:text-gray-50 transition-colors duration-200">О сервисе</a>
+                <a href="#calculator" class="nav-link-scroll hover:text-gray-50 transition-colors duration-200">Калькулятор</a>
+                <a href="#view-tracking" onclick="switchView('tracking')" class="hover:text-gray-50 transition-colors duration-200">Трекинг</a>
+            </nav>
+            
+            <div class="hidden md:flex items-center gap-3">
+                <button onclick="switchView('admin')" id="nav-admin" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium py-2.5 px-5 rounded-lg transition-colors shadow-lg">
+                    Админка
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 flex-1">
+        
+        <!-- ========================================== -->
+        <!-- VIEW 1: ГЛАВНАЯ СТРАНИЦА (SPA HOME VIEW)  -->
+        <!-- ========================================== -->
+        <div id="view-home" class="pt-28 pb-32 md:pb-20">
+            <section id="calculator" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+                
+                <div class="flex-1 text-center lg:text-left scroll-hidden scroll-anim" style="transition-delay: 0ms;">
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-[#2690D2] to-slate-400">
+                        Премиальная доставка <br class="hidden lg:block"/> с Poizon и фабрик Китая
+                    </h1>
+                    <p class="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto lg:mx-0 font-light leading-relaxed">
+                        Без переплат посредникам и наценок маркетплейсов. Выкупаем за 30 минут, доставляем от 14 дней с полной страховкой груза.
+                    </p>
+
+                    <div class="mt-8 flex items-center justify-center lg:justify-start gap-4">
+                        <div class="flex -space-x-3">
+                            <div class="w-10 h-10 rounded-full border-2 border-slate-900 bg-[#01d2a1] flex items-center justify-center text-xs font-bold text-slate-900 shadow-[0_0_20px_rgba(1,210,161,0.6)] relative z-30">PZ</div>
+                            <div class="w-10 h-10 rounded-full border-2 border-slate-900 bg-[#ff5000] flex items-center justify-center text-xs font-bold text-white shadow-[0_0_20px_rgba(255,80,0,0.6)] relative z-20">TB</div>
+                            <div class="w-10 h-10 rounded-full border-2 border-slate-900 bg-[#ff6a00] flex items-center justify-center text-[10px] sm:text-xs font-bold text-white shadow-[0_0_20px_rgba(255,106,0,0.6)] relative z-10">1688</div>
+                        </div>
+                        <span class="text-sm text-slate-400">Работаем с любыми <br> китайскими площадками</span>
+                    </div>
+                </div>
+                
+                <div class="w-full max-w-md scroll-hidden scroll-anim" style="transition-delay: 200ms;">
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6 sm:p-8 shadow-lg" style="transform: translateZ(0); -webkit-transform: translateZ(0);">
+                        <h3 class="text-2xl font-semibold mb-6 text-gray-50">Расчет стоимости</h3>
+                        
+                        <form id="orderForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1.5">Ссылка на товар (Poizon/1688)</label>
+                                <input type="url" id="itemLink" placeholder="https://..." class="w-full bg-slate-900/50 border border-white/5 text-gray-50 rounded-lg px-4 py-3 focus:outline-none focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] transition-all placeholder-slate-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-slate-400 mb-1.5">Стоимость товара</label>
+                                <div class="relative">
+                                    <input type="number" id="cnyPrice" required min="0" step="0.01" placeholder="Цена в ¥" class="w-full bg-slate-900/50 border border-white/5 text-gray-50 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] transition-all placeholder-slate-500">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">¥</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900/40 rounded-lg p-4 mt-2 border border-white/5 flex justify-between items-center">
+                                <span class="text-sm text-slate-400">Примерная стоимость:</span>
+                                <div class="text-right">
+                                    <div id="rubPrice" class="text-2xl font-bold text-brand-gradient">0 ₽</div>
+                                    <div class="text-xs text-slate-500">Курс: 13.5 ₽ за 1 ¥</div>
+                                </div>
+                            </div>
+
+                            <a href="https://t.me/mmalina_lovvv" target="_blank" class="w-full bg-brand-gradient hover:opacity-90 text-white font-medium rounded-lg py-3.5 mt-4 transition-opacity duration-200 flex justify-center items-center shadow-lg shadow-[#0253FA]/20">
+                                Заказать товар
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section id="about" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 overflow-hidden">
+                <div class="text-center mb-16 scroll-hidden scroll-anim">
+                    <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-50">Логистика без границ и скрытых комиссий</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg p-8 rounded-3xl hover:bg-slate-800/60 transition-colors duration-300 scroll-hidden scroll-anim" style="transition-delay: 0ms;">
+                        <div class="w-14 h-14 bg-[#2690D2]/10 border border-[#2690D2]/20 rounded-2xl flex items-center justify-center mb-6">
+                            <svg class="w-7 h-7 text-[#2690D2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-50">Прямой выкуп</h3>
+                        <p class="text-slate-400 leading-relaxed">Выкупаем товары в день обращения напрямую с Poizon, 1688 и Taobao без лишних посредников.</p>
+                    </div>
+                    
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg p-8 rounded-3xl hover:bg-slate-800/60 transition-colors duration-300 scroll-hidden scroll-anim" style="transition-delay: 150ms;">
+                        <div class="w-14 h-14 bg-[#2690D2]/10 border border-[#2690D2]/20 rounded-2xl flex items-center justify-center mb-6">
+                            <svg class="w-7 h-7 text-[#2690D2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-50">Прозрачный курс</h3>
+                        <p class="text-slate-400 leading-relaxed">Честный курс юаня без скрытых наценок. Вы платите за товар, а не за воздух.</p>
+                    </div>
+
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg p-8 rounded-3xl hover:bg-slate-800/60 transition-colors duration-300 scroll-hidden scroll-anim" style="transition-delay: 300ms;">
+                        <div class="w-14 h-14 bg-[#2690D2]/10 border border-[#2690D2]/20 rounded-2xl flex items-center justify-center mb-6">
+                            <svg class="w-7 h-7 text-[#2690D2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-50">Страховка груза</h3>
+                        <p class="text-slate-400 leading-relaxed">Полная материальная ответственность за сохранность ваших кроссовок и техники.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="py-20 overflow-hidden relative border-t border-white/5">
+                <h2 class="text-3xl sm:text-4xl font-bold text-center mb-12 tracking-tight text-gray-50 scroll-hidden scroll-anim">Недавно доставлено</h2>
+                
+                <div class="marquee-container flex gap-6 w-full max-w-[100vw] overflow-hidden group">
+                    <div class="marquee-content flex flex-shrink-0 gap-6">
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/4wZXQZs2/image.png" alt="Nike Dunk Low" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Nike Dunk Low</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 450¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 8 500 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 14 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/k69CN7cz/image.png" alt="iPhone 17 Pro Max" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">iPhone 17 Pro Max 256GB</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на 1688: 8200¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 120 000 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 12 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/h1cj5BWH/image.png" alt="AirPods Pro 2" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">AirPods Pro 2</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 1550¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 22 500 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 16 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/602hsSP9/image.png" alt="Louis Vuitton Trainer" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Louis Vuitton Trainer</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 7500¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 105 000 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 16 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/7dV0t8Yn/image.png" alt="Air Jordan 1 Retro High" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Air Jordan 1 Retro High</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 1250¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 18 500 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 14 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/NdW5cQdf/image.png" alt="Dyson Airwrap" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Dyson Airwrap</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 3200¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 45 000 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 12 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/RpbfggKV/image.png" alt="Chrome Hearts Hoodie" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Chrome Hearts Hoodie</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на 1688: 2100¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 30 000 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 15 дней</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="marquee-content flex flex-shrink-0 gap-6" aria-hidden="true">
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/4wZXQZs2/image.png" alt="Nike Dunk Low" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Nike Dunk Low</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 450¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 8 500 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 14 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/k69CN7cz/image.png" alt="iPhone 17 Pro Max" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">iPhone 17 Pro Max 256GB</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на 1688: 8200¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 120 000 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 12 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/h1cj5BWH/image.png" alt="AirPods Pro 2" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">AirPods Pro 2</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 1550¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 22 500 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 16 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/602hsSP9/image.png" alt="Louis Vuitton Trainer" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Louis Vuitton Trainer</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 7500¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 105 000 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 16 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/7dV0t8Yn/image.png" alt="Air Jordan 1 Retro High" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Air Jordan 1 Retro High</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 1250¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 18 500 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 14 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/NdW5cQdf/image.png" alt="Dyson Airwrap" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Dyson Airwrap</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на Poizon: 3200¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 45 000 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 12 дней</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-xl p-4 flex gap-4 items-center w-[320px] transition-colors hover:bg-slate-800/60">
+                            <div class="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/5 overflow-hidden p-1">
+                                <img src="https://i.ibb.co/RpbfggKV/image.png" alt="Chrome Hearts Hoodie" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-50 truncate w-48">Chrome Hearts Hoodie</h4>
+                                <p class="text-xs text-slate-400 mt-1">Цена на 1688: 2100¥</p>
+                                <p class="text-sm font-semibold text-brand-gradient mt-0.5">Итого: 30 000 ₽</p>
+                                <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded uppercase tracking-wider font-medium">Доставлено за 15 дней</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Блок "Почему мы" (Вставлен сразу после слайдера) -->
+            <section id="why-us" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 scroll-hidden scroll-anim">
+                <div class="relative rounded-[2.5rem] bg-slate-900/50 backdrop-blur-2xl border border-white/10 overflow-hidden shadow-2xl p-8 sm:p-12 lg:p-16">
+                    <div class="absolute top-0 left-0 w-[500px] h-[500px] bg-[#2690D2]/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+                    <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#0253FA]/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+                    
+                    <div class="relative z-10 flex flex-col lg:flex-row gap-16">
+                        <!-- Левая часть: Почему мы -->
+                        <div class="flex-1">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gradient/10 border border-[#2690D2]/20 text-[#2690D2] text-sm font-semibold uppercase tracking-wider mb-6">
+                                <span class="text-base">🔥</span> Преимущества
+                            </div>
+                            <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-6 tracking-tight">
+                                Почему заказывают через <span class="text-brand-gradient">PoizonOdet?</span>
+                            </h2>
+                            <p class="text-slate-400 text-lg leading-relaxed mb-10">
+                                Мы — не просто очередные посредники. Мы сервис, который делает покупку брендовых вещей из Китая безопасной, быстрой и прозрачной.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div class="bg-slate-800/50 rounded-2xl p-6 border border-white/5 hover:border-[#2690D2]/30 transition-colors group">
+                                    <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform">📱</div>
+                                    <h4 class="text-gray-50 font-bold mb-2">Собственное IT-решение</h4>
+                                    <p class="text-sm text-slate-400 leading-relaxed">Удобное Mini App прямо в Telegram. Вбиваете трек-номер — и сразу видите этап вашего заказа.</p>
+                                </div>
+                                <div class="bg-slate-800/50 rounded-2xl p-6 border border-white/5 hover:border-[#2690D2]/30 transition-colors group">
+                                    <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform">📸</div>
+                                    <h4 class="text-gray-50 font-bold mb-2">Обязательный фотоотчет</h4>
+                                    <p class="text-sm text-slate-400 leading-relaxed">Когда вещи приходят на наш склад в Китае, мы делаем фото. Вы видите вещь до её отправки в РФ!</p>
+                                </div>
+                                <div class="bg-slate-800/50 rounded-2xl p-6 border border-white/5 hover:border-[#2690D2]/30 transition-colors group">
+                                    <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform">💸</div>
+                                    <h4 class="text-gray-50 font-bold mb-2">Честный расчет</h4>
+                                    <p class="text-sm text-slate-400 leading-relaxed">Сразу говорим, из чего складывается цена. Никаких скрытых комиссий при выдаче посылки.</p>
+                                </div>
+                                <div class="bg-slate-800/50 rounded-2xl p-6 border border-white/5 hover:border-[#2690D2]/30 transition-colors group">
+                                    <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition-transform">🛡</div>
+                                    <h4 class="text-gray-50 font-bold mb-2">Гарантия оригинала</h4>
+                                    <p class="text-sm text-slate-400 leading-relaxed">Строгий легит-чек от Poizon. Вы получаете товар с фирменными пломбами и сертификатом.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Правая часть: Как заказать -->
+                        <div class="lg:w-[400px] shrink-0">
+                            <div class="bg-slate-950/50 rounded-3xl p-8 border border-white/5 h-full">
+                                <h3 class="text-2xl font-bold text-gray-50 mb-8">Как сделать заказ?</h3>
+                                
+                                <div class="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[#2690D2] before:to-slate-800">
+                                    <div class="relative flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-slate-900 border-2 border-[#2690D2] flex items-center justify-center text-sm font-bold text-[#2690D2] shrink-0 z-10 shadow-[0_0_10px_rgba(38,144,210,0.3)]">1</div>
+                                        <div class="pt-2">
+                                            <p class="text-sm text-slate-300 leading-relaxed">Находите нужную вещь, которую хотите выкупить, или доверяете поиск нам.</p>
+                                        </div>
+                                    </div>
+                                    <div class="relative flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-slate-900 border-2 border-[#2690D2] flex items-center justify-center text-sm font-bold text-[#2690D2] shrink-0 z-10 shadow-[0_0_10px_rgba(38,144,210,0.3)]">2</div>
+                                        <div class="pt-2">
+                                            <p class="text-sm text-slate-300 leading-relaxed">Скидываете ссылку или скриншот нашему менеджеру: <a href="https://t.me/mmalina_lovvv" target="_blank" class="text-[#2690D2] hover:underline font-medium">@mmalina_lovvv</a></p>
+                                        </div>
+                                    </div>
+                                    <div class="relative flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-slate-900 border-2 border-[#2690D2] flex items-center justify-center text-sm font-bold text-[#2690D2] shrink-0 z-10 shadow-[0_0_10px_rgba(38,144,210,0.3)]">3</div>
+                                        <div class="pt-2">
+                                            <p class="text-sm text-slate-300 leading-relaxed">Мы делаем расчет и выдаем вам личный трек-номер.</p>
+                                        </div>
+                                    </div>
+                                    <div class="relative flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-brand-gradient flex items-center justify-center text-sm font-bold text-white shrink-0 z-10 shadow-[0_0_15px_rgba(2,83,250,0.5)]">4</div>
+                                        <div class="pt-2">
+                                            <p class="text-sm text-slate-300 leading-relaxed">Вы следите за заказом в нашем боте и забираете посылку в СДЭК!</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-10 pt-6 border-t border-white/10 text-center">
+                                    <p class="text-xs text-slate-400 mb-4">Подписывайтесь на канал, чтобы не пропустить скидки и подборки крутых пар! 🤝</p>
+                                    <a href="https://t.me/poizonodett" target="_blank" class="w-full bg-white/5 hover:bg-white/10 text-white font-medium rounded-xl py-3 px-4 transition-colors flex justify-center items-center gap-2 text-sm border border-white/10">
+                                        <svg class="w-5 h-5 text-[#2690D2]" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                                        Перейти в канал
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 mb-10">
+                <h2 class="text-3xl sm:text-4xl font-bold text-center mb-12 tracking-tight text-gray-50 scroll-hidden scroll-anim">Частые вопросы</h2>
+                
+                <div class="space-y-4">
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-2xl overflow-hidden scroll-hidden scroll-anim" style="transition-delay: 0ms;">
+                        <button class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                            <span class="font-medium text-gray-50 text-lg">Оплачивается ли доставка отдельно от стоимости товара?</span>
+                            <svg class="w-5 h-5 text-[#2690D2] transform transition-transform duration-300 faq-icon shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                <div class="px-6 pb-5 text-slate-400 leading-relaxed">
+                                    Да, логистика из Китая в РФ оплачивается отдельно по прибытии товара на наш склад. При первоначальном заказе вы оплачиваете только стоимость самого выкупа (цена товара + комиссия). Цена доставки зависит от фактического веса вашей посылки.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-2xl overflow-hidden scroll-hidden scroll-anim" style="transition-delay: 100ms;">
+                        <button class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                            <span class="font-medium text-gray-50 text-lg">Как происходит расчет стоимости доставки?</span>
+                            <svg class="w-5 h-5 text-[#2690D2] transform transition-transform duration-300 faq-icon shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                <div class="px-6 pb-5 text-slate-400 leading-relaxed">
+                                    Расчет стоимости доставки зависит от того, в какой город нужно доставить вашу вещь и какой у нее вес. Доставка оплачивается отдельно от самой вещи.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-2xl overflow-hidden scroll-hidden scroll-anim" style="transition-delay: 200ms;">
+                        <button class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                            <span class="font-medium text-gray-50 text-lg">Какие гарантии оригинальности кроссовок и вещей?</span>
+                            <svg class="w-5 h-5 text-[#2690D2] transform transition-transform duration-300 faq-icon shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                <div class="px-6 pb-5 text-slate-400 leading-relaxed">
+                                    Все товары с Poizon проходят многоэтапный Legit Check. Вы получаете заказ с фирменными пломбами, NFC-чипами и официальными сертификатами платформы.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-2xl overflow-hidden scroll-hidden scroll-anim" style="transition-delay: 300ms;">
+                        <button class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                            <span class="font-medium text-gray-50 text-lg">Что делать, если китаец пришлет брак или не тот размер?</span>
+                            <svg class="w-5 h-5 text-[#2690D2] transform transition-transform duration-300 faq-icon shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                <div class="px-6 pb-5 text-slate-400 leading-relaxed">
+                                    Мы страхуем вас от этого. Все посылки вскрываются и проверяются на нашем складе в Гуанчжоу перед отправкой в РФ. Если обнаружим дефект — сами оформим возврат продавцу.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-2xl overflow-hidden scroll-hidden scroll-anim" style="transition-delay: 400ms;">
+                        <button class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                            <span class="font-medium text-gray-50 text-lg">С какими площадками вы работаете?</span>
+                            <svg class="w-5 h-5 text-[#2690D2] transform transition-transform duration-300 faq-icon shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                <div class="px-6 pb-5 text-slate-400 leading-relaxed">
+                                    Основной объем — это Poizon, Go fish, 1688, Taobao. Но если вам нужен товар с внутренних китайских фабрик или WeChat-поставщиков, наш менеджер организует выкуп по фото.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-lg rounded-2xl overflow-hidden scroll-hidden scroll-anim" style="transition-delay: 500ms;">
+                        <button class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                            <span class="font-medium text-gray-50 text-lg">Сколько в среднем длится доставка?</span>
+                            <svg class="w-5 h-5 text-[#2690D2] transform transition-transform duration-300 faq-icon shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        <div class="faq-content">
+                            <div class="faq-inner">
+                                <div class="px-6 pb-5 text-slate-400 leading-relaxed">
+                                    Стандартный срок доставки до Москвы составляет 14-21 день под ключ.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Финальный блок с призывом к действию (CTA) -->
+            <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 scroll-hidden scroll-anim">
+                <div class="relative rounded-3xl overflow-hidden bg-slate-900 border border-white/10 shadow-2xl">
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-brand-gradient opacity-10 blur-[100px] pointer-events-none z-0"></div>
+                    
+                    <div class="relative z-10 px-6 py-16 sm:py-20 lg:px-16 text-center flex flex-col items-center">
+                        <div class="w-16 h-16 bg-slate-800 border border-white/10 rounded-2xl flex items-center justify-center mb-6 shadow-inner">
+                            <svg class="w-8 h-8 text-[#2690D2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-6 tracking-tight">
+                            Готовы сделать свой <span class="text-brand-gradient">первый заказ?</span>
+                        </h2>
+                        <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                            Хватит переплачивать реселлерам и сомневаться в оригинальности. Начните заказывать брендовые вещи с Poizon и 1688 по реальному курсу и с прозрачной доставкой уже сегодня.
+                        </p>
+                        <div class="flex flex-col sm:flex-row justify-center w-full sm:w-auto gap-4">
+                            <a href="https://t.me/mmalina_lovvv" target="_blank" class="inline-flex items-center justify-center gap-3 bg-brand-gradient hover:opacity-90 text-white text-base font-medium px-8 py-4 rounded-xl transition-all shadow-lg shadow-[#0253FA]/25 w-full sm:w-auto">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                                Оформить заказ
+                            </a>
+                            <a href="#calculator" onclick="lenis.scrollTo('#calculator', { offset: -100 })" class="inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-base font-medium px-8 py-4 rounded-xl transition-all border border-white/10 shadow-lg w-full sm:w-auto">
+                                Рассчитать стоимость
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: ОТСЛЕЖИВАНИЕ (SPA TRACKING VIEW)    -->
+        <!-- ========================================== -->
+        <div id="view-tracking" class="hidden min-h-screen pt-32 pb-12 w-full flex flex-col items-center">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-center">
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-6 tracking-tight text-gray-50">Отслеживание груза</h2>
+                
+                <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-3 flex flex-col sm:flex-row gap-4 shadow-lg mx-auto w-full max-w-3xl">
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                            <svg class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" id="trackInput" placeholder="Введите трек-номер" class="w-full bg-transparent text-gray-50 placeholder-slate-500 border-none focus:ring-0 pl-14 pr-4 py-4 sm:py-5 text-lg outline-none font-mono">
+                    </div>
+                    <button onclick="findTrack()" id="btn-track-order" class="bg-brand-gradient hover:opacity-90 text-white font-medium rounded-xl px-10 py-4 sm:py-5 text-lg transition-opacity w-full sm:w-auto shadow-md flex justify-center items-center">
+                        Найти заказ
+                    </button>
+                </div>
+
+                <!-- Результат Трекинга -->
+                <div id="trackingResult" class="hidden max-w-4xl mx-auto mt-16 w-full text-left">
+                    <div class="bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 sm:p-12 shadow-lg relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-[#2690D2]/5 rounded-full blur-3xl pointer-events-none z-0"></div>
+                        
+                        <div class="relative z-10">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
+                                <div>
+                                    <p class="text-sm text-slate-400 mb-1 uppercase tracking-wider font-medium">Информация по треку</p>
+                                    <p id="displayTrackNum" class="text-2xl sm:text-3xl font-extrabold tracking-wider text-gray-50 font-mono">#</p>
+                                </div>
+                                <div>
+                                    <span class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold bg-[#2690D2]/10 text-[#2690D2] border border-[#2690D2]/20 shadow-sm">
+                                        Статус: <span id="tracking-status" class="ml-1.5 uppercase tracking-wider">Загрузка...</span>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 bg-slate-900/50 rounded-2xl p-6 sm:p-8 border border-white/5">
+                                <div class="flex flex-col items-center sm:items-start gap-3 sm:border-r border-white/5 sm:pr-8">
+                                    <div class="flex flex-row items-center justify-between w-full max-w-[10rem] sm:max-w-[14rem]">
+                                        <p class="text-sm text-slate-400 font-medium">Фото со склада</p>
+                                        <p class="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 inline-flex items-center gap-1 whitespace-nowrap">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                            Legit Check
+                                        </p>
+                                    </div>
+                                    <div class="w-40 h-40 sm:w-56 sm:h-56 rounded-2xl bg-slate-800/80 flex items-center justify-center shrink-0 border border-white/5 overflow-hidden shadow-inner">
+                                        <img id="tracking-photo-img" src="" class="hidden w-full h-full object-cover hover:scale-110 transition-transform duration-500 cursor-pointer">
+                                        <svg id="tracking-photo-placeholder" class="w-16 h-16 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col justify-center gap-5 py-2">
+                                    <div class="flex justify-between items-end border-b border-white/5 pb-4">
+                                        <span class="text-sm text-slate-400">Фактический вес:</span>
+                                        <span class="text-xl font-medium text-gray-50" id="tracking-weight">0 кг</span>
+                                    </div>
+                                    <div class="flex justify-between items-end">
+                                        <span class="text-sm text-slate-400">К оплате за доставку:</span>
+                                        <div class="text-right">
+                                            <span class="text-3xl font-bold text-brand-gradient block" id="tracking-price">0 ₽</span>
+                                            <span id="tracking-payment-status" class="text-[10px] uppercase font-bold text-amber-400 tracking-wider inline-block mt-1.5 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20" style="display: none;">Не оплачено</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Динамический Прогресс-бар -->
+                            <div class="relative pt-6 w-full">
+                                <div class="absolute top-7 sm:top-10 left-[10%] right-[10%] h-1 bg-slate-800/80 -z-10 rounded-full"></div>
+                                <div id="tracking-progress-bar" class="absolute top-7 sm:top-10 left-[10%] w-[0%] h-1 bg-brand-gradient -z-10 rounded-full transition-all duration-1000"></div>
+                                
+                                <div class="flex justify-between relative z-10">
+                                    <!-- Step 1 -->
+                                    <div class="flex flex-col items-center w-1/5 tracking-step">
+                                        <div class="step-icon w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 sm:border-4 border-slate-950 flex items-center justify-center mb-2 sm:mb-3 bg-slate-800 text-slate-500 shadow-inner transition-all duration-500">
+                                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <span class="step-text text-[9px] sm:text-xs font-medium text-slate-500 text-center transition-colors duration-500">Выкуплен</span>
+                                    </div>
+                                    <!-- Step 2 -->
+                                    <div class="flex flex-col items-center w-1/5 tracking-step">
+                                        <div class="step-icon w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 sm:border-4 border-slate-950 flex items-center justify-center mb-2 sm:mb-3 bg-slate-800 text-slate-500 shadow-inner transition-all duration-500">
+                                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <span class="step-text text-[9px] sm:text-xs font-medium text-slate-500 text-center transition-colors duration-500">В пути на склад</span>
+                                    </div>
+                                    <!-- Step 3 -->
+                                    <div class="flex flex-col items-center w-1/5 tracking-step">
+                                        <div class="step-icon w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 sm:border-4 border-slate-950 flex items-center justify-center mb-2 sm:mb-3 bg-slate-800 text-slate-500 shadow-inner transition-all duration-500">
+                                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <span class="step-text text-[9px] sm:text-xs font-medium text-slate-500 text-center transition-colors duration-500">Склад в Китае</span>
+                                    </div>
+                                    <!-- Step 4 -->
+                                    <div class="flex flex-col items-center w-1/5 tracking-step">
+                                        <div class="step-icon w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 sm:border-4 border-slate-950 flex items-center justify-center mb-2 sm:mb-3 bg-slate-800 text-slate-500 shadow-inner transition-all duration-500">
+                                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <span class="step-text text-[9px] sm:text-xs font-medium text-slate-500 text-center transition-colors duration-500">В пути в РФ</span>
+                                    </div>
+                                    <!-- Step 5 -->
+                                    <div class="flex flex-col items-center w-1/5 tracking-step">
+                                        <div class="step-icon w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 sm:border-4 border-slate-950 flex items-center justify-center mb-2 sm:mb-3 bg-slate-800 text-slate-500 shadow-inner transition-all duration-500">
+                                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <span class="step-text text-[9px] sm:text-xs font-medium text-slate-500 text-center transition-colors duration-500">Выдан</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-950/50 border-t border-white/5 pt-12 pb-8 relative z-10 backdrop-blur-md mt-auto w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="text-xl font-extrabold tracking-tight text-center md:text-left text-gray-50">
+                    Poizon<span class="text-brand-gradient">Odet</span>
+                    <p class="text-xs text-slate-500 font-normal mt-1">PoizonOdet</p>
+                </div>
+                
+                <div class="flex space-x-8">
+                    <a href="https://t.me/mmalina_lovvv" target="_blank" class="text-slate-500 hover:text-[#2690D2] transition-colors flex items-center gap-2 text-sm font-medium">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                        Telegram
+                    </a>
+                </div>
+                
+                <div class="text-sm text-slate-500 md:text-right pb-10 md:pb-0 flex flex-col items-center md:items-end gap-2">
+                    <span>© 2026 PoizonOdet.<br class="block md:hidden"> Разработано <span class="text-[#2690D2]">Idea Lab by Coppa</span></span>
+                    <button onclick="openAuthModal()" class="text-slate-600 hover:text-slate-400 transition-colors text-xs flex items-center gap-1 mt-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        Вход для персонала
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <nav class="md:hidden fixed bottom-6 left-4 right-4 z-[60]">
+        <div class="bg-slate-900/80 backdrop-blur-xl border border-white/5 rounded-[2.5rem] px-2 py-1.5 flex justify-around items-center shadow-lg">
+            
+            <a href="#" onclick="event.preventDefault(); switchView('home'); lenis.scrollTo(0);" class="mobile-tab-btn flex flex-col items-center justify-center w-[45%] py-2 rounded-[1.4rem] bg-slate-800 text-gray-50 transition-colors">
+                <svg class="w-6 h-6 mb-1 text-[#2690D2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span class="text-[10px] font-medium tracking-wide text-[#2690D2]">Главная</span>
+            </a>
+            
+            <a href="#" onclick="event.preventDefault(); switchView('tracking');" class="mobile-tab-btn flex flex-col items-center justify-center w-[45%] py-2 rounded-[1.4rem] text-slate-500 hover:text-gray-50 transition-colors relative">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <span class="text-[10px] font-medium tracking-wide">Трекинг</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Модальное окно Входа (Только для Админа) -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-[150] overflow-y-auto bg-slate-950/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="flex min-h-full items-center justify-center p-4" onclick="if(event.target === this) closeAuthModal()">
+            <div id="auth-modal-card" class="bg-slate-800/90 backdrop-blur-2xl border border-white/10 p-6 sm:p-8 rounded-3xl w-full max-w-md shadow-2xl relative transform scale-95 transition-transform duration-300">
+                <button onclick="closeAuthModal()" class="absolute top-5 right-5 sm:top-6 sm:right-6 text-slate-400 hover:text-white transition-colors focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-50 mb-6 text-center">Вход в панель управления</h3>
+                <form id="auth-form" onsubmit="event.preventDefault(); submitAuth();" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1.5">Email администратора</label>
+                        <input type="email" id="auth-email" value="vladislav@poizonodet.ru" required class="w-full bg-slate-900/50 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] outline-none rounded-xl px-4 py-2.5 sm:py-3 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1.5">Пароль</label>
+                        <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-900/50 border border-white/5 text-white focus:border-[#2690D2] focus:ring-1 focus:ring-[#2690D2] outline-none rounded-xl px-4 py-2.5 sm:py-3 transition-colors">
+                    </div>
+                    <button type="submit" id="auth-submit-btn" class="w-full bg-brand-gradient hover:opacity-90 text-white font-medium rounded-xl py-3 sm:py-3.5 mt-4 transition-all flex justify-center items-center shadow-lg shadow-[#0253FA]/20">
+                        Войти
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. КОНФИГУРАЦИЯ SUPABASE И TG
+        // ==========================================
+        const SUPABASE_URL = 'https://ryqqeiblxrzefxbnjulo.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_-LSBrGVRewiPebnyJ2g59A_l9XYPqZW';
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let currentUser = null;
+        let isRealAdmin = false;
+
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.setHeaderColor('#0f172a');
+        
+        async function initTelegramUser() {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                const user = tg.initDataUnsafe.user;
+                try {
+                    const { error } = await supabaseClient.from('telegram_users').upsert({ 
+                        id: String(user.id), 
+                        first_name: user.first_name || '', 
+                        username: user.username || '', 
+                        last_seen: new Date() 
+                    });
+                    if (error) console.error("Ошибка сохранения пользователя TG:", error);
+                } catch (e) {
+                    console.error("Сетевая ошибка TG:", e);
+                }
+            }
+        }
+        initTelegramUser();
+
+        const spinnerSVG = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+
+        function setButtonLoading(button, isLoading, originalText) {
+            if (!button) return;
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = `${spinnerSVG} Обработка...`;
+                button.classList.add('opacity-75', 'cursor-not-allowed');
+            } else {
+                button.disabled = false;
+                button.innerHTML = originalText;
+                button.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed top-24 right-4 sm:right-6 z-[120] flex flex-col gap-3 items-end pointer-events-none';
+                document.body.appendChild(container);
+            }
+            
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-red-500/20 border-red-500/30 text-red-400';
+            toast.className = `flex items-center px-5 py-3.5 rounded-2xl backdrop-blur-xl border shadow-lg transform transition-all duration-300 translate-y-[-20px] opacity-0 ${bgColor}`;
+            toast.innerHTML = `<span class="text-sm font-semibold tracking-wide">${message}</span>`;
+            
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-[-20px]', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // ==========================================
+        // 2. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И НАВИГАЦИЯ
+        // ==========================================
+        const lenis = new Lenis({ duration: 1.2, smooth: true });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        let observer;
+
+        function switchView(viewName) {
+            ['home', 'tracking', 'admin'].forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                if(el) el.classList.add('hidden');
+            });
+            const active = document.getElementById(`view-${viewName}`);
+            if(active) {
+                active.classList.remove('hidden');
+                window.scrollTo(0, 0); // Исключает системный скролл снизу-вверх
+                lenis.scrollTo(0, { immediate: true });
+            }
+
+            if (active) {
+                active.querySelectorAll('.scroll-anim').forEach(el => {
+                    el.classList.add('scroll-hidden');
+                    el.classList.remove('scroll-visible');
+                    if (observer) {
+                        observer.unobserve(el);
+                        observer.observe(el);
+                    }
+                });
+            }
+        }
+
+        const navLogo = document.getElementById('nav-logo');
+        const navHomeBtn = document.getElementById('nav-home-btn');
+        const navTrackingBtn = document.getElementById('nav-tracking-btn');
+        
+        if (navLogo) navLogo.addEventListener('click', (e) => { e.preventDefault(); switchView('home'); });
+        if (navHomeBtn) navHomeBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('home'); });
+        if (navTrackingBtn) navTrackingBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('tracking'); });
+
+        document.querySelectorAll('.nav-link-scroll').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                const homeView = document.getElementById('view-home');
+                
+                if (homeView && homeView.classList.contains('hidden')) {
+                    switchView('home');
+                    setTimeout(() => lenis.scrollTo(targetId, { offset: -100 }), 50);
+                } else {
+                    lenis.scrollTo(targetId, { offset: -100 });
+                }
+            });
+        });
+
+        // ==========================================
+        // 3. АВТОРИЗАЦИЯ (ТОЛЬКО АДМИН)
+        // ==========================================
+
+        function openAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            const card = document.getElementById('auth-modal-card');
+            if (!modal || !card) return;
+
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+            });
+            lenis.stop();
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            const card = document.getElementById('auth-modal-card');
+            if (!modal || !card) return;
+
+            modal.style.opacity = '0';
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                lenis.start();
+            }, 300);
+        }
+
+        async function submitAuth() {
+            const emailInput = document.getElementById('auth-email');
+            const passwordInput = document.getElementById('auth-password');
+            
+            if (!emailInput || !passwordInput) return;
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                showToast('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const origText = submitBtn ? submitBtn.textContent.trim() : '';
+            setButtonLoading(submitBtn, true, origText);
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                console.error("Auth Sign In Error:", error);
+                showToast('Ошибка: Неверный логин или пароль', 'error');
+            } else {
+                showToast('Успешный вход в панель', 'success');
+                closeAuthModal();
+            }
+
+            setButtonLoading(submitBtn, false, 'Войти');
+        }
+
+        async function handleSignOut() {
+            const { error } = await supabaseClient.auth.signOut();
+            if (error) console.error("Sign Out Error:", error);
+            showToast('Вы вышли из системы', 'success');
+            switchView('home');
+        }
+
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            const navAdmin = document.getElementById('nav-admin');
+
+            if (session) {
+                currentUser = session.user;
+                isRealAdmin = (session.user.email === 'vladislav@poizonodet.ru');
+
+                if (isRealAdmin) {
+                    if (navAdmin) navAdmin.classList.remove('hidden');
+                    loadAdminOrders();
+                } else {
+                    supabaseClient.auth.signOut();
+                    if (navAdmin) navAdmin.classList.add('hidden');
+                }
+
+                if (event === 'SIGNED_IN' && isRealAdmin) {
+                    setTimeout(() => switchView('admin'), 300);
+                }
+            } else {
+                currentUser = null;
+                isRealAdmin = false;
+                if (navAdmin) navAdmin.classList.add('hidden');
+            }
+        });
+
+        function setActiveMobileTab(element, viewName, targetAnchorId) {
+            document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-gray-50');
+                btn.classList.add('text-slate-500');
+                const icon = btn.querySelector('svg');
+                const span = btn.querySelector('span');
+                if(icon) icon.classList.remove('text-[#2690D2]');
+                if(span) span.classList.remove('text-[#2690D2]');
+            });
+            
+            element.classList.remove('text-slate-500');
+            element.classList.add('bg-slate-800', 'text-gray-50');
+            const icon = element.querySelector('svg');
+            const span = element.querySelector('span');
+            if(icon) icon.classList.add('text-[#2690D2]');
+            if(span) span.classList.add('text-[#2690D2]');
+
+            if (viewName) {
+                switchView(viewName);
+            }
+            
+            if (targetAnchorId) {
+                setTimeout(() => {
+                    lenis.scrollTo('#' + targetAnchorId, { offset: -100 });
+                }, 50);
+            }
+        }
+
+        // ==========================================
+        // 4. ПУБЛИЧНЫЙ ТРЕКИНГ (БЕЗ АВТОРИЗАЦИИ)
+        // ==========================================
+        const EXCHANGE_RATE = 13.5;
+        const cnyInput = document.getElementById('cnyPrice');
+        const rubOutput = document.getElementById('rubPrice');
+
+        if(cnyInput && rubOutput) {
+            cnyInput.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value) && value > 0) {
+                    const totalRub = value * EXCHANGE_RATE;
+                    rubOutput.textContent = totalRub.toLocaleString('ru-RU', { 
+                        minimumFractionDigits: 0, 
+                        maximumFractionDigits: 2 
+                    }) + ' ₽';
+                } else {
+                    rubOutput.textContent = '0 ₽';
+                }
+            });
+        }
+
+        // Фиктивная форма отправки для гостя (чтобы просто сохранить трек в БД)
+        const orderFormEl = document.getElementById('orderForm');
+        if (orderFormEl) {
+            orderFormEl.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const linkInput = document.getElementById('itemLink');
+                const priceInput = document.getElementById('cnyPrice');
+                if (!linkInput || !priceInput) return;
+
+                const link = linkInput.value;
+                const price = parseFloat(priceInput.value);
+                const trackNum = 'PO-' + Math.floor(1000 + Math.random() * 9000);
+
+                // Редиректим в правильный ТГ аккаунт для заказа
+                window.open('https://t.me/mmalina_lovvv', '_blank');
+                
+                // И тихо записываем в БД
+                await supabaseClient.from('orders').insert([{
+                    client_contact: 'С сайта (Гость)', 
+                    item_link: link,
+                    price_cny: price,
+                    internal_track_number: trackNum,
+                    status: 'Ожидает расчета'
+                }]);
+            });
+        }
+
+        // Обновление визуального прогресс-бара
+        function updateProgressUI(status) {
+            let currentStep = 0;
+            const s = status.toLowerCase();
+            
+            if (s.includes('ожидает')) currentStep = 0;
+            else if (s.includes('выкуплен')) currentStep = 1;
+            else if (s.includes('едет на склад')) currentStep = 2;
+            else if (s.includes('на складе')) currentStep = 3;
+            else if (s.includes('в россию') || s.includes('к вам')) currentStep = 4;
+            else if (s.includes('выдан')) currentStep = 5;
+
+            // Исправленная ширина линии (максимум 80%, так как отступ слева уже 10% и справа остается 10%)
+            const progressWidths = ['0%', '0%', '20%', '40%', '60%', '80%'];
+            const progressBar = document.getElementById('tracking-progress-bar');
+            if(progressBar) progressBar.style.width = progressWidths[currentStep];
+
+            const steps = document.querySelectorAll('.tracking-step');
+            steps.forEach((el, index) => {
+                const stepNum = index + 1;
+                const icon = el.querySelector('.step-icon');
+                const text = el.querySelector('.step-text');
+                
+                // Сброс на базовый (серый) вид
+                icon.className = 'step-icon w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 sm:border-4 border-slate-950 flex items-center justify-center mb-2 sm:mb-3 transition-all duration-500 bg-slate-800 text-slate-500 shadow-inner';
+                text.className = 'step-text text-[9px] sm:text-xs font-medium text-center transition-colors duration-500 text-slate-500';
+                icon.innerHTML = `<svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`;
+
+                if (stepNum < currentStep) {
+                    // Завершено (синий)
+                    icon.classList.replace('bg-slate-800', 'bg-brand-gradient');
+                    icon.classList.replace('text-slate-500', 'text-white');
+                    icon.classList.remove('shadow-inner');
+                    text.classList.replace('text-slate-500', 'text-gray-50');
+                } else if (stepNum === currentStep) {
+                    // Текущий шаг (пульс)
+                    icon.classList.replace('bg-slate-800', 'bg-brand-gradient');
+                    icon.classList.replace('text-slate-500', 'text-white');
+                    icon.classList.remove('shadow-inner');
+                    icon.classList.add('shadow-[0_0_15px_rgba(2,83,250,0.5)]');
+                    icon.innerHTML = `<div class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full animate-pulse"></div>`;
+                    text.classList.replace('text-slate-500', 'text-brand-gradient');
+                    text.classList.replace('font-medium', 'font-bold');
+                }
+            });
+        }
+
+        async function trackOrder(num) {
+            const btnTrack = document.getElementById('btn-track-order');
+            const origText = btnTrack ? btnTrack.textContent.trim() : 'Найти заказ';
+            if (btnTrack) setButtonLoading(btnTrack, true, origText);
+
+            const { data, error } = await supabaseClient
+                .from('orders')
+                .select('*')
+                .eq('internal_track_number', num)
+                .single();
+
+            if (btnTrack) setButtonLoading(btnTrack, false, origText);
+
+            if (error || !data) {
+                console.error("Track Order Error:", error);
+                showToast('Заказ с таким трек-номером не найден', 'error');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('trackingResult');
+            const statusEl = document.getElementById('tracking-status');
+            
+            if(statusEl) statusEl.innerText = data.status;
+
+            const weightEl = document.getElementById('tracking-weight');
+            const priceEl = document.getElementById('tracking-price');
+            const paymentStatusEl = document.getElementById('tracking-payment-status');
+            
+            if (weightEl) weightEl.textContent = (data.weight_kg || 0) + ' кг';
+            if (priceEl) priceEl.textContent = (data.price_rub || 0) + ' ₽';
+            
+            if (paymentStatusEl) {
+                if (data.price_rub && data.price_rub > 0) {
+                    paymentStatusEl.style.display = 'inline-block';
+                } else {
+                    paymentStatusEl.style.display = 'none';
+                }
+            }
+
+            // Обновляем визуальную полосу
+            updateProgressUI(data.status);
+
+            const photoImg = document.getElementById('tracking-photo-img');
+            const photoPlaceholder = document.getElementById('tracking-photo-placeholder');
+            if (data.photo_url) {
+                if (photoImg) {
+                    photoImg.src = data.photo_url;
+                    photoImg.classList.remove('hidden');
+                }
+                if (photoPlaceholder) photoPlaceholder.classList.add('hidden');
+            } else {
+                if (photoImg) photoImg.classList.add('hidden');
+                if (photoPlaceholder) photoPlaceholder.classList.remove('hidden');
+            }
+
+            if (resultDiv) {
+                resultDiv.classList.remove('hidden');
+                resultDiv.style.opacity = '0';
+                resultDiv.style.transform = 'translateY(15px)';
+                resultDiv.style.transition = 'all 0.4s ease-out';
+                
+                setTimeout(() => {
+                    resultDiv.style.opacity = '1';
+                    resultDiv.style.transform = 'translateY(0)';
+                }, 50);
+                setTimeout(() => {
+                    lenis.scrollTo(resultDiv, { offset: -100, duration: 1.5 });
+                }, 100);
+            }
+            
+            showToast('Информация загружена', 'success');
+        }
+
+        async function findTrack() {
+            const input = document.getElementById('trackInput');
+            if (!input || input.value.trim() === '') {
+                if (input) input.focus();
+                return;
+            }
+            
+            const num = input.value.toUpperCase();
+            const displayEl = document.getElementById('displayTrackNum');
+            if (displayEl) displayEl.textContent = num;
+            await trackOrder(num);
+        }
+
+        // ==========================================
+        // 5. АДМИНКА (Заказы, Storage, Рассылка)
+        // ==========================================
+        
+        async function startMassBroadcast() {
+            const token = '8656363301:AAH_WOwC5z_J_3SZv3ebgJWjpCxA-ic4nCA'; // Токен бота
+            const textInput = document.getElementById('tg-broadcast-text');
+            if (!textInput) return;
+
+            const text = textInput.value.trim();
+            
+            if (!text) {
+                showToast('Заполните текст рассылки', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('btn-broadcast');
+            const statusDiv = document.getElementById('broadcast-status');
+            const origText = btn ? btn.textContent.trim() : 'Запустить рассылку';
+            
+            if (btn) setButtonLoading(btn, true, origText);
+            if (statusDiv) {
+                statusDiv.textContent = "Получение списка пользователей...";
+                statusDiv.classList.remove('hidden');
+            }
+            
+            const { data: users, error } = await supabaseClient.from('telegram_users').select('id');
+            
+            if (error || !users || users.length === 0) {
+                if (error) console.error("Load TG Users Error:", error);
+                showToast('База пользователей пуста или ошибка запроса', 'error');
+                if (btn) setButtonLoading(btn, false, origText);
+                if (statusDiv) statusDiv.classList.add('hidden');
+                return;
+            }
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const user of users) {
+                try {
+                    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: user.id, text: text, parse_mode: 'HTML' })
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } catch (e) {
+                    console.error("Fetch Error:", e);
+                    errorCount++;
+                }
+                
+                if (statusDiv) statusDiv.textContent = `Отправлено: ${successCount} из ${users.length}`;
+                await new Promise(r => setTimeout(r, 50)); 
+            }
+            
+            showToast(`Рассылка завершена! Успешно: ${successCount}`, 'success'); 
+            
+            if (btn) setButtonLoading(btn, false, origText);
+            setTimeout(() => { if (statusDiv) statusDiv.classList.add('hidden'); }, 3000);
+        }
+
+        let adminOrdersList = [];
+
+        async function loadAdminOrders() {
+            const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
+            if (error) {
+                console.error("Load Orders Error:", error);
+                showToast("Ошибка загрузки базы заказов", "error");
+                return;
+            }
+
+            adminOrdersList = data || [];
+            
+            const tbody = document.getElementById('admin-orders-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (adminOrdersList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500">Заказов пока нет</td></tr>';
+                return;
+            }
+
+            adminOrdersList.forEach(order => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-white/5 hover:bg-slate-700/30 transition-colors';
+                
+                let linkHtml = order.item_link && order.item_link !== 'Создано менеджером' 
+                    ? `<a href="${order.item_link}" target="_blank" class="hover:text-[#27D2D3] hover:underline cursor-pointer transition-colors max-w-[150px] truncate inline-block">Ссылка на товар</a>` 
+                    : 'Ручной заказ';
+                let statusColor = "bg-slate-500/10 text-slate-400 border border-slate-500/20";
+                
+                if(order.status === "Ожидает расчета") statusColor = "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20";
+                if(order.status === "На складе в Китае" || order.status === "На складе" || order.status === "Едет на склад в Китае") statusColor = "bg-[#2690D2]/10 text-[#2690D2] border border-[#2690D2]/20";
+                if(order.status === "В пути" || order.status === "Отправлен в Россию" || order.status === "Отправлен к вам") statusColor = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+
+                tr.innerHTML = `
+                    <td class="p-5 font-mono text-slate-300">${order.internal_track_number || 'Н/Д'}</td>
+                    <td class="p-5 text-gray-50">${order.client_contact || 'Не указан'}</td>
+                    <td class="p-5 text-[#2690D2]">${linkHtml}</td>
+                    <td class="p-5">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider ${statusColor}">
+                            ${order.status}
+                        </span>
+                    </td>
+                    <td class="p-5 font-medium text-emerald-400">${order.price_rub || 0} ₽</td>
+                    <td class="p-5 text-right">
+                        <button onclick="openAdminOrderCard('${order.internal_track_number}')" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 text-xs font-medium text-white rounded-lg transition-colors shadow-md border border-white/10 flex items-center justify-center gap-2 ml-auto">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            Карточка
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function generateTrackNumberAdmin() {
+            const num = Math.floor(1000 + Math.random() * 9000);
+            const idInput = document.getElementById('newOrderId');
+            if (idInput) idInput.value = `PO-${num}`;
+        }
+
+        async function handleCreateOrderAdmin(e) {
+            e.preventDefault();
+            const orderIdInput = document.getElementById('newOrderId');
+            const contactInputEl = document.getElementById('newOrderContact');
+            const linkInput = document.getElementById('newItemLink');
+            
+            if (!orderIdInput) return;
+
+            const orderId = orderIdInput.value;
+            const contact = contactInputEl && contactInputEl.value ? contactInputEl.value.trim() : 'Не указан';
+            const link = linkInput && linkInput.value ? linkInput.value.trim() : 'Создано менеджером';
+            
+            const payload = {
+                internal_track_number: orderId,
+                status: 'Ожидает расчета',
+                price_cny: 0,
+                item_link: link,
+                client_contact: contact
+            };
+
+            const btn = document.getElementById('btnCreateOrderAdmin');
+            const origText = btn ? btn.textContent.trim() : 'Создать заказ';
+            if (btn) setButtonLoading(btn, true, origText);
+
+            const { error } = await supabaseClient.from('orders').insert([payload]);
+
+            if (error) {
+                console.error("Create Admin Order Error:", error);
+                showToast('Ошибка: ' + error.message, 'error');
+                if (btn) setButtonLoading(btn, false, origText);
+            } else {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = "Успешно!";
+                    btn.classList.replace('bg-brand-gradient', 'bg-emerald-600');
+                }
+                showToast(`Заказ ${orderId} создан!`, 'success');
+                
+                setTimeout(() => {
+                    if (btn) {
+                        btn.innerHTML = origText;
+                        btn.classList.replace('bg-emerald-600', 'bg-brand-gradient');
+                    }
+                    orderIdInput.value = '';
+                    if(contactInputEl) contactInputEl.value = '';
+                    if(linkInput) linkInput.value = '';
+                    loadAdminOrders();
+                }, 2000);
+            }
+        }
+
+        let currentEditingOrderInternalId = null;
+        let selectedPhotoFile = null;
+        
+        function openAdminOrderCard(trackNum) {
+            const modal = document.getElementById('admin-order-modal');
+            if (!modal) return;
+
+            currentEditingOrderInternalId = trackNum;
+            const idEl = document.getElementById('admin-modal-id');
+            if (idEl) idEl.textContent = trackNum;
+
+            selectedPhotoFile = null;
+            const textEl = document.getElementById('photo-upload-text');
+            const uploadEl = document.getElementById('admin-photo-upload');
+            const previewImg = document.getElementById('admin-photo-preview');
+            
+            if (textEl) textEl.innerText = "Нажмите для загрузки";
+            if (uploadEl) uploadEl.value = "";
+            if (previewImg) {
+                previewImg.src = '';
+                previewImg.classList.add('hidden');
+            }
+
+            const order = adminOrdersList.find(o => o.internal_track_number === trackNum);
+            
+            if (order) {
+                const trackInput = document.getElementById('admin-update-track');
+                const contactInput = document.getElementById('admin-update-contact');
+                const statusSelect = document.getElementById('admin-update-status');
+                const weightInput = document.getElementById('admin-update-weight');
+                const priceInput = document.getElementById('admin-update-price');
+                const itemLinkEl = document.getElementById('admin-card-item-link');
+
+                if (trackInput) trackInput.value = order.internal_track_number || '';
+                if (contactInput) contactInput.value = order.client_contact || '';
+                
+                if (statusSelect) {
+                    let optionExists = Array.from(statusSelect.options).some(opt => opt.value === order.status);
+                    if (!optionExists && order.status) {
+                        statusSelect.add(new Option(order.status, order.status));
+                    }
+                    statusSelect.value = order.status || 'Ожидает расчета';
+                }
+
+                if(weightInput) weightInput.value = order.weight_kg || '';
+                if(priceInput) priceInput.value = order.price_rub || '';
+
+                if (itemLinkEl) {
+                    if (order.item_link && order.item_link !== 'Создано менеджером') {
+                        itemLinkEl.href = order.item_link;
+                        itemLinkEl.textContent = "Перейти по ссылке товара";
+                    } else {
+                        itemLinkEl.removeAttribute('href');
+                        itemLinkEl.textContent = "Без ссылки";
+                    }
+                }
+
+                if (order.photo_url && previewImg) {
+                    previewImg.src = order.photo_url;
+                    previewImg.classList.remove('hidden');
+                    if (textEl) textEl.innerText = "Изменить фото";
+                }
+            }
+
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+            });
+            lenis.stop();
+        }
+        
+        function closeAdminOrderCard() {
+            const modal = document.getElementById('admin-order-modal');
+            if (!modal) return;
+
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.classList.add('hidden'); lenis.start(); }, 300);
+            currentEditingOrderInternalId = null;
+        }
+
+        function handlePhotoSelect(e) {
+            if(e.target.files.length > 0) {
+                selectedPhotoFile = e.target.files[0];
+                const textEl = document.getElementById('photo-upload-text');
+                if (textEl) textEl.innerText = 'Выбран: ' + selectedPhotoFile.name;
+                
+                const previewImg = document.getElementById('admin-photo-preview');
+                if (previewImg) {
+                    previewImg.src = URL.createObjectURL(selectedPhotoFile);
+                    previewImg.classList.remove('hidden');
+                }
+            }
+        }
+
+        async function saveAdminOrderCard() {
+            if(!currentEditingOrderInternalId) return;
+
+            const btn = document.getElementById('admin-save-btn');
+            const origText = btn ? btn.textContent.trim() : 'Сохранить изменения';
+            if (btn) setButtonLoading(btn, true, origText);
+
+            const newTrack = document.getElementById('admin-update-track')?.value.trim();
+            const newContact = document.getElementById('admin-update-contact')?.value.trim() || 'Не указан';
+            const newStatus = document.getElementById('admin-update-status')?.value || 'Ожидает расчета';
+            const weight = parseFloat(document.getElementById('admin-update-weight')?.value || 0);
+            const shipPrice = parseFloat(document.getElementById('admin-update-price')?.value || 0);
+            
+            let photoUrl = null;
+
+            if (selectedPhotoFile) {
+                const filePath = `order_${currentEditingOrderInternalId}/${Date.now()}_${selectedPhotoFile.name}`;
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                    .from('order-photos')
+                    .upload(filePath, selectedPhotoFile);
+
+                if (uploadError) {
+                    console.error("Storage Upload Error:", uploadError);
+                    showToast('Ошибка загрузки фото', 'error');
+                } else {
+                    const { data: { publicUrl } } = supabaseClient.storage
+                        .from('order-photos')
+                        .getPublicUrl(filePath);
+                    photoUrl = publicUrl;
+                }
+            }
+
+            const updatePayload = { 
+                internal_track_number: newTrack,
+                client_contact: newContact,
+                status: newStatus, 
+                weight_kg: weight, 
+                price_rub: shipPrice 
+            };
+            if (photoUrl) updatePayload.photo_url = photoUrl;
+
+            const { error } = await supabaseClient
+                .from('orders')
+                .update(updatePayload)
+                .eq('internal_track_number', currentEditingOrderInternalId);
+
+            if (btn) setButtonLoading(btn, false, origText);
+
+            if (error) {
+                console.error("Update Order Error:", error);
+                showToast('Ошибка обновления заказа', 'error');
+            } else {
+                showToast('Изменения сохранены!', 'success');
+                loadAdminOrders();
+                closeAdminOrderCard();
+                
+                // Если мы прямо сейчас смотрим этот заказ в трекинге, обновим его
+                const trackInput = document.getElementById('trackInput');
+                if (trackInput && trackInput.value.toUpperCase() === currentEditingOrderInternalId.toUpperCase()) {
+                    trackOrder(currentEditingOrderInternalId);
+                }
+            }
+        }
+
+        // ==========================================
+        // 7. ИНИЦИАЛИЗАЦИЯ И АНИМАЦИИ
+        // ==========================================
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('scroll-visible');
+                    entry.target.classList.remove('scroll-hidden');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-anim').forEach((el) => {
+            observer.observe(el);
+        });
+
+        function toggleFaq(button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('.faq-icon');
+            if (content) content.classList.toggle('is-open');
+            if (icon) icon.classList.toggle('faq-icon-rotate');
+        }
+    </script>
+</body>
+</html>
